@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- iOS Web App Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Dert Sırdaşım">
+    <meta name="theme-color" content="#111827">
+
+    <title>Dert Sırdaşım - Global Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;700&family=Noto+Sans+SC:wght@400;700&family=Noto+Sans+Arabic:wght@400;700&display=swap" rel="stylesheet">
+    
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/4712/4712009.png"> 
+
+    <style>
+        body { font-family: 'Nunito', sans-serif; background-color: #111827; color: #e2e8f0; overflow: hidden; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; padding-top: env(safe-area-inset-top); }
+        /* Font adjustments */
+        body.lang-ja { font-family: 'Noto Sans JP', sans-serif; }
+        body.lang-zh { font-family: 'Noto Sans SC', sans-serif; }
+        body.lang-ar { font-family: 'Noto Sans Arabic', sans-serif; direction: rtl; }
+
+        .app-container { width: 100%; height: 100dvh; background: linear-gradient(180deg, #1f2937 0%, #0f172a 100%); display: flex; flex-direction: column; position: relative; margin: 0 auto; max-width: 600px; }
+        @media (min-width: 768px) { .app-container { border-left: 1px solid #374151; border-right: 1px solid #374151; } }
+
+        /* Splash */
+        .splash-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #1e1b4b 0%, #0f172a 100%); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.8s ease-out, visibility 0.8s; }
+        .splash-logo { font-size: 4.5rem; background: linear-gradient(135deg, #f472b6 0%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem; }
+        .splash-title { font-size: 2.5rem; font-weight: 900; color: white; margin-bottom: 0.5rem; }
+        .splash-subtitle { color: #94a3b8; font-size: 0.9rem; font-weight: 600; letter-spacing: 1px; }
+        .splash-screen.fade-out { opacity: 0; visibility: hidden; pointer-events: none; }
+
+        /* Modals */
+        .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #111827, #0f172a); z-index: 100; display: none; flex-direction: column; justify-content: center; padding: 24px; transition: opacity 0.3s ease; }
+        .modal-overlay.active { display: flex; }
+        .form-select { background-color: #1f2937; border: 1px solid #374151; color: white; padding: 12px; border-radius: 12px; width: 100%; margin-bottom: 12px; outline: none; transition: border-color 0.3s; font-size: 0.95rem; }
+        .form-select:focus { border-color: #ec4899; }
+        .lang-select-mini { background: #374151; color: white; border: 1px solid #4b5563; padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; outline: none; }
+        .legal-box { background: #1f2937; border: 1px solid #374151; padding: 15px; border-radius: 8px; font-size: 0.8rem; color: #9ca3af; margin-bottom: 20px; max-height: 200px; overflow-y: auto; line-height: 1.4; }
+
+        /* Chat */
+        .chat-area { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 40px; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+        .message-container { display: flex; flex-direction: column; width: 100%; margin-bottom: 16px; }
+        .message { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 0.95rem; line-height: 1.5; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.3); word-wrap: break-word; animation: popIn 0.3s ease; }
+        
+        .message.user { align-self: flex-end; background: linear-gradient(135deg, #ec4899, #be185d); color: white; border-bottom-right-radius: 2px; }
+        body.lang-ar .message.user { align-self: flex-start; border-bottom-left-radius: 2px; border-bottom-right-radius: 18px; }
+        
+        .message.ai { align-self: flex-start; background: #334155; color: #f1f5f9; border-bottom-left-radius: 2px; border: 1px solid #475569; }
+        body.lang-ar .message.ai { align-self: flex-end; border-bottom-right-radius: 2px; border-bottom-left-radius: 18px; }
+
+        .message.giybet { background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; border-bottom-left-radius: 2px; border: none; }
+        body.lang-ar .message.giybet { margin-right: 0; margin-left: auto; border-bottom-right-radius: 2px; border-bottom-left-radius: 18px; }
+        
+        /* Feedback Buttons */
+        .feedback-container { display: flex; gap: 15px; margin-top: 6px; margin-left: 10px; opacity: 0; animation: fadeIn 0.5s forwards 0.5s; }
+        .fb-btn { cursor: pointer; color: #6b7280; font-size: 1rem; transition: transform 0.2s, color 0.2s; }
+        .fb-btn:hover { color: white; transform: scale(1.2); }
+        .fb-btn.liked { color: #34d399; }
+        .fb-btn.disliked { color: #f87171; }
+
+        /* Input */
+        .input-area { background: rgba(31, 41, 55, 0.95); backdrop-filter: blur(10px); padding: 16px; border-top: 1px solid #374151; display: flex; flex-direction: column; gap: 10px; padding-bottom: env(safe-area-inset-bottom, 20px); }
+        .send-btn-custom { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: 0.2s; }
+        .send-btn-custom:active { transform: scale(0.95); }
+        body.lang-ar .send-btn-custom i { transform: scaleX(-1); }
+
+        .mode-switch { display: flex; background: #111827; padding: 4px; border-radius: 10px; margin-bottom: 5px; border: 1px solid #374151; }
+        .mode-btn { flex: 1; padding: 8px; text-align: center; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; color: #6b7280; transition: 0.3s; }
+        .mode-btn.active.advice { background: #374151; color: #f472b6; }
+        .mode-btn.active.gossip { background: #4c1d95; color: #e9d5ff; }
+
+        /* Animations */
+        @keyframes popIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .typing-dots span { display: inline-block; width: 6px; height: 6px; background: #cbd5e1; border-radius: 50%; margin: 0 2px; animation: typing 1.4s infinite; }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; } .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- SPLASH -->
+    <div id="splashScreen" class="splash-screen">
+        <div class="splash-logo"><i class="fa-solid fa-ear-listen"></i></div>
+        <h1 class="splash-title">DERT SIRDAŞIM</h1>
+        <p class="splash-subtitle">ATAOL AI Techs Güvencesi İle</p>
+    </div>
+
+    <!-- LEGAL MODAL -->
+    <div id="legalModal" class="modal-overlay">
+        <div class="w-full max-w-sm mx-auto mb-4 flex justify-end">
+            <select id="legalLangSelect" class="lang-select-mini" onchange="app.changeAppLanguage(this.value)">
+                <option value="tr" selected>Türkçe</option>
+                <option value="en">English</option>
+                <option value="de">Deutsch</option>
+                <option value="fr">Français</option>
+                <option value="es">Español</option>
+                <option value="ru">Русский</option>
+                <option value="ja">日本語</option>
+                <option value="pt">Português</option>
+                <option value="ar">العربية</option>
+                <option value="zh">中文</option>
+            </select>
+        </div>
+        <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 w-full max-w-md mx-auto">
+            <h2 id="legalTitle" class="text-xl font-bold text-white mb-4 text-center">Yasal Uyarı</h2>
+            <div id="legalTextContent" class="legal-box"></div>
+            <button id="legalBtn" onclick="app.acceptLegal()" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl mt-2 transition">Kabul Ediyorum</button>
+        </div>
+    </div>
+
+    <!-- PROFILE MODAL -->
+    <div id="profileModal" class="modal-overlay">
+        <div class="w-full max-w-sm mx-auto">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-2xl mx-auto mb-3 shadow-lg">
+                    <i id="headerIcon" class="fa-solid fa-user"></i>
+                </div>
+                <h2 id="profileTitle" class="text-xl font-bold text-white">Seni Tanıyalım</h2>
+                <p id="profileSubtitle" class="text-gray-400 text-xs mt-1">Yargısız, güvenli dert ortağın.</p>
+            </div>
+            <form onsubmit="event.preventDefault(); app.submitProfile();">
+                <select id="userGender" class="form-select" onchange="app.handleGenderChange(this.value)" required></select>
+                <select id="userAge" class="form-select" required></select>
+                <select id="userJob" class="form-select" required></select>
+                <select id="userRelation" class="form-select" required></select>
+                <select id="userMood" class="form-select" required></select>
+                <button type="submit" id="startBtn" class="w-full bg-gradient-to-r from-pink-600 to-purple-600 text-white font-bold py-3 rounded-xl mt-4 shadow-lg transform active:scale-95 transition">Başla</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- APP HEADER -->
+    <header class="p-4 flex items-center justify-between border-b border-gray-700 bg-gray-900 z-10 shadow-md">
+        <div class="flex items-center gap-3">
+            <div id="headerIconContainer" class="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
+                <i class="fa-solid fa-ear-listen"></i>
+            </div>
+            <div>
+                <h1 id="appTitle" class="font-bold text-white">Dert Sırdaşım</h1>
+                <span id="appSubtitle" class="text-xs text-pink-400">Seninle konuşmak iyi gelecek</span>
+            </div>
+        </div>
+        <button onclick="app.clearChatHistory()" class="w-10 h-10 rounded-full border border-gray-600 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800 transition">
+            <i class="fa-solid fa-trash-can"></i>
+        </button>
+    </header>
+
+    <!-- CHAT AREA -->
+    <div id="chatBox" class="chat-area"></div>
+
+    <!-- INPUT AREA -->
+    <div class="input-area">
+        <div class="mode-switch">
+            <div id="btnAdvice" class="mode-btn active advice" onclick="app.setMode('advice')"><i class="fa-solid fa-heart mr-1"></i> <span id="labelAdvice">Dertleşme</span></div>
+            <div id="btnGossip" class="mode-btn gossip" onclick="app.setMode('gossip')"><i class="fa-solid fa-bolt mr-1"></i> <span id="labelGossip">Gıybet</span></div>
+        </div>
+        <div class="flex gap-2 items-end">
+            <textarea id="userInput" rows="2" class="w-full bg-gray-800 text-white rounded-xl px-4 py-3 border border-gray-600 focus:border-pink-500 outline-none resize-none text-sm" placeholder="Yaz bakalım..."></textarea>
+            <button id="sendBtn" onclick="app.sendMessage()" class="send-btn-custom bg-pink-600 text-white"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+</div>
+
+<script>
+// =================================================================
+// 1. API KEY CONFIGURATION (SPLIT)
+// =================================================================
+// LÜTFEN ANAHTARINIZI BURAYA GİRİNİZ (PartA ve PartB'yi doldurun)
+const partA = "AIzaSyA8qvQAi3Lc7MJ"; // Örn: AIzaSy...
+const partB = "mSuiiN3TWDICaJ7y--78"; // Örn: ...KqPxg...
+const apiKey = partA + partB; 
+
+/** Visual Canvas Effect */
+const CanvasEffect = {
+    canvas: null, ctx: null, particles: [], animationId: null,
+    init() {
+        this.canvas = document.getElementById('splashCanvas');
+        if (!this.canvas) return;
+        this.ctx = this.canvas.getContext('2d');
+        if (!this.ctx) return;
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+        this.createParticles();
+        this.animate();
+    },
+    resize() {
+        if(this.canvas) { this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight; }
+    },
+    createParticles() {
+        if(!this.canvas) return;
+        const count = Math.floor((this.canvas.width * this.canvas.height) / 10000); 
+        this.particles = [];
+        for (let i = 0; i < count; i++) {
+            this.particles.push({
+                x: Math.random() * this.canvas.width, y: Math.random() * this.canvas.height,
+                vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5,
+                size: Math.random() * 2 + 1, alpha: Math.random() * 0.5 + 0.1
+            });
+        }
+    },
+    animate() {
+        if(!this.ctx) return;
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        for (let i = 0; i < this.particles.length; i++) {
+            const p = this.particles[i];
+            p.x += p.vx; p.y += p.vy;
+            if(p.x < 0 || p.x > this.canvas.width) p.vx *= -1;
+            if(p.y < 0 || p.y > this.canvas.height) p.vy *= -1;
+            this.ctx.fillStyle = `rgba(167, 139, 250, ${p.alpha})`;
+            this.ctx.beginPath();
+            this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            this.ctx.fill();
+            for (let j = i; j < this.particles.length; j++) {
+                const p2 = this.particles[j];
+                const dx = p.x - p2.x; const dy = p.y - p2.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < 100) {
+                    this.ctx.strokeStyle = `rgba(167, 139, 250, ${0.1 - dist/1000})`;
+                    this.ctx.lineWidth = 0.5;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(p.x, p.y);
+                    this.ctx.lineTo(p2.x, p2.y);
+                    this.ctx.stroke();
+                }
+            }
+        }
+        this.animationId = requestAnimationFrame(() => this.animate());
+    },
+    stop() { if(this.animationId) cancelAnimationFrame(this.animationId); }
+};
+
+/** Translations */
+const Translations = {
+    tr: {
+        appTitle: "Dert Sırdaşım",
+        appSubtitle: "Seninle konuşmak iyi gelecek",
+        labelAdvice: "Dertleşme",
+        labelGossip: "Gıybet",
+        placeholder: "Yaz bakalım...",
+        send: "GÖNDER",
+        legalTitle: "Yasal Uyarı",
+        legalText: "<p class='mb-2'><strong>1. Yaş Sınırı:</strong> 18+ yaş gereklidir.</p><p class='mb-2'><strong>2. Sorumluluk Reddi:</strong> Bu bir AI simülasyonudur. Profesyonel destek yerine geçmez.</p><p class='mb-2'><strong>3. Etik:</strong> Küfür ve yasadışı içerik yasaktır.</p><p class='mb-2'><strong>4. Gizlilik:</strong> Veriler tarayıcıda saklanır.</p><p class='mb-2'><strong>5. Rıza:</strong> Uygulamayı kullanarak şartları kabul edersiniz.</p>",
+        legalBtn: "Okudum, Anladım & Kabul Ediyorum",
+        clearHistoryMsg: "Sohbet geçmişini silmek konusunda emin misiniz?",
+        introMature: "Merhabalar efendim. Sizi dinlemek için buradayım.",
+        introMale: "Selam dostum, hoş geldin.",
+        introFemale: "Selam canım, hoş geldin.",
+        introNeutral: "Merhaba, hoş geldiniz.",
+        introSad: " Biraz üzgün görünüyorsunuz.",
+        profileTitle: "Seni Tanıyalım",
+        profileSubtitle: "Yargısız, güvenli dert ortağın.",
+        startBtn: "Sohbete Başla",
+        
+        gender: ["Cinsiyet", "Kadın", "Erkek", "Belirtmek İstemiyorum"],
+        age: ["Yaş Aralığı", "18 - 24", "25 - 34", "35 - 44", "45 - 54", "55 - 64", "65 - 74", "75 - 84", "85 ve üzeri"],
+        job: ["Ne ile meşgulsün?", "Öğrenci", "Çalışan", "İşsiz", "Emekli", "Ev Hanımı"],
+        relation: ["İlişki durumu", "Bekar", "İlişkisi Var", "Nişanlı/Sözlü", "Evli", "Dul/Boşanmış", "Karmaşık"],
+        mood: ["Şu an ruh halin nasıl?", "Mutlu 😃", "Üzgün 😔", "Kızgın 😠", "Yorgun 😫", "Endişeli 😰", "Nötr 😐"]
+    },
+    en: {
+        appTitle: "Soul Confidant",
+        appSubtitle: "It will feel good to talk",
+        labelAdvice: "Vent",
+        labelGossip: "Gossip",
+        placeholder: "Type here...",
+        send: "SEND",
+        legalTitle: "Legal Disclaimer",
+        legalText: "<p class='mb-2'><strong>1. Age Limit:</strong> 18+ required.</p><p class='mb-2'><strong>2. Disclaimer:</strong> This is an AI simulation. Not a substitute for professional help.</p><p class='mb-2'><strong>3. Ethics:</strong> No profanity or illegal content.</p><p class='mb-2'><strong>4. Privacy:</strong> Data stored locally.</p><p class='mb-2'><strong>5. Consent:</strong> By using the app, you accept these terms.</p>",
+        legalBtn: "I Read, Understood & Accept",
+        clearHistoryMsg: "Are you sure you want to clear the chat history?",
+        introMature: "Hello there. I am here to listen to you.",
+        introMale: "Hey buddy, welcome.",
+        introFemale: "Hey dear, welcome.",
+        introNeutral: "Hello, welcome.",
+        introSad: " You seem a bit down.",
+        profileTitle: "Let's Know You",
+        profileSubtitle: "Your non-judgmental safe space.",
+        startBtn: "Start Chat",
+
+        gender: ["Gender?", "Female", "Male", "Prefer not to say"],
+        age: ["Age Range?", "18 - 24", "25 - 34", "35 - 44", "45 - 54", "55 - 64", "65 - 74", "75 - 84", "85+"],
+        job: ["Occupation?", "Student", "Employed", "Unemployed", "Retired", "Homemaker"],
+        relation: ["Relationship Status?", "Single", "In a Relationship", "Engaged", "Married", "Divorced/Widowed", "Complicated"],
+        mood: ["Current Mood?", "Happy 😃", "Sad 😔", "Angry 😠", "Tired 😫", "Anxious 😰", "Neutral 😐"]
+    },
+    de: {
+        appTitle: "Seelenverwandter",
+        appSubtitle: "Es tut gut zu reden",
+        labelAdvice: "Ausschütten",
+        labelGossip: "Klatsch",
+        placeholder: "Schreib hier...",
+        send: "SENDEN",
+        legalTitle: "Haftungsausschluss",
+        legalText: "<p class='mb-2'><strong>1. Alter:</strong> 18+ erforderlich.</p><p class='mb-2'><strong>2. Haftung:</strong> KI-Simulation. Kein Ersatz für professionelle Hilfe.</p><p class='mb-2'><strong>3. Ethik:</strong> Keine Obszönitäten oder illegalen Inhalte.</p><p class='mb-2'><strong>4. Datenschutz:</strong> Daten lokal gespeichert.</p><p class='mb-2'><strong>5. Zustimmung:</strong> Durch die Nutzung akzeptieren Sie diese Bedingungen.</p>",
+        legalBtn: "Gelesen & Akzeptiert",
+        clearHistoryMsg: "Sind Sie sicher, dass Sie den Chatverlauf löschen möchten?",
+        introMature: "Hallo. Ich bin hier, um zuzuhören.",
+        introMale: "Hey Kumpel, willkommen.",
+        introFemale: "Hallo meine Liebe, willkommen.",
+        introNeutral: "Hallo, willkommen.",
+        introSad: " Du scheinst etwas traurig zu sein.",
+        profileTitle: "Dich Kennenlernen",
+        profileSubtitle: "Dein urteilsfreier sicherer Raum.",
+        startBtn: "Chat Starten",
+
+        gender: ["Geschlecht?", "Weiblich", "Männlich", "Keine Angabe"],
+        age: ["Altersgruppe?", "18 - 24", "25 - 34", "35 - 44", "45 - 54", "55 - 64", "65 - 74", "75 - 84", "85+"],
+        job: ["Beruf?", "Student", "Angestellt", "Arbeitslos", "Rentner", "Hausfrau/mann"],
+        relation: ["Beziehungsstatus?", "Single", "Vergeben", "Verlobt", "Verheiratet", "Geschieden/Verwitwet", "Kompliziert"],
+        mood: ["Aktuelle Stimmung?", "Glücklich 😃", "Traurig 😔", "Wütend 😠", "Müde 😫", "Ängstlich 😰", "Neutral 😐"]
+    },
+    fr: {
+        appTitle: "Confident",
+        appSubtitle: "Parler fait du bien",
+        labelAdvice: "Confier",
+        labelGossip: "Potins",
+        placeholder: "Écrivez ici...",
+        send: "ENVOYER",
+        legalTitle: "Avis Légal",
+        legalText: "<p class='mb-2'><strong>1. Âge:</strong> 18+ requis.</p><p class='mb-2'><strong>2. Avis:</strong> Simulation IA. Ne remplace pas un pro.</p><p class='mb-2'><strong>3. Éthique:</strong> Pas de grossièretés ou contenu illégal.</p><p class='mb-2'><strong>4. Confidentialité:</strong> Données stockées localement.</p><p class='mb-2'><strong>5. Consentement:</strong> En utilisant l'application, vous acceptez ces termes.</p>",
+        legalBtn: "Lu et Accepté",
+        clearHistoryMsg: "Êtes-vous sûr de vouloir effacer l'historique ?",
+        introMature: "Bonjour. Je suis là pour écouter.",
+        introMale: "Salut l'ami, bienvenue.",
+        introFemale: "Salut ma chère, bienvenue.",
+        introNeutral: "Bonjour, bienvenue.",
+        introSad: " Vous semblez un peu triste.",
+        profileTitle: "Faisons Connaissance",
+        profileSubtitle: "Votre espace sûr sans jugement.",
+        startBtn: "Commencer",
+
+        gender: ["Genre?", "Femme", "Homme", "Je préfère ne pas dire"],
+        age: ["Tranche d'âge?", "18 - 24", "25 - 34", "35 - 44", "45 - 54", "55 - 64", "65 - 74", "75 - 84", "85+"],
+        job: ["Occupation?", "Étudiant", "Employé", "Chômeur", "Retraité", "Au foyer"],
+        relation: ["Situation amoureuse?", "Célibataire", "En couple", "Fiancé", "Marié", "Divorcé/Veuf", "Compliqué"],
+        mood: ["Humeur actuelle?", "Heureux 😃", "Triste 😔", "En colère 😠", "Fatigué 😫", "Anxieux 😰", "Neutre 😐"]
+    },
+    es: {
+        appTitle: "Confidente",
+        appSubtitle: "Hablar te hará bien",
+        labelAdvice: "Desahogarse",
+        labelGossip: "Chisme",
+        placeholder: "Escribe aquí...",
+        send: "ENVIAR",
+        legalTitle: "Aviso Legal",
+        legalText: "<p class='mb-2'><strong>1. Edad:</strong> 18+.</p><p class='mb-2'><strong>2. Aviso:</strong> Simulación IA. No sustituye ayuda profesional.</p><p class='mb-2'><strong>3. Ética:</strong> Sin blasfemias o contenido ilegal.</p><p class='mb-2'><strong>4. Privacidad:</strong> Datos almacenados localmente.</p><p class='mb-2'><strong>5. Consentimiento:</strong> Al usar la aplicación, aceptas estos términos.</p>",
+        legalBtn: "Leído y Aceptado",
+        clearHistoryMsg: "¿Estás seguro de que quieres borrar el historial?",
+        introMature: "Hola. Estoy aquí para escuchar.",
+        introMale: "Hola amigo, bienvenido.",
+        introFemale: "Hola querida, bienvenida.",
+        introNeutral: "Hola, bienvenido.",
+        introSad: " Pareces un poco triste.",
+        profileTitle: "Conozcámonos",
+        profileSubtitle: "Tu espacio seguro sin juicios.",
+        startBtn: "Iniciar Chat",
+
+        gender: ["¿Género?", "Mujer", "Hombre", "Prefiero no decir"],
+        age: ["Rango de edad?", "18 - 24", "25 - 34", "35 - 44", "45 - 54", "55 - 64", "65 - 74", "75 - 84", "85+"],
+        job: ["¿Ocupación?", "Estudiante", "Empleado", "Desempleado", "Jubilado", "Ama de casa"],
+        relation: ["¿Estado civil?", "Soltero", "En una relación", "Prometido", "Casado", "Divorciado/Viudo", "Complicado"],
+        mood: ["¿Estado de ánimo?", "Feliz 😃", "Triste 😔", "Enojado 😠", "Cansado 😫", "Ansioso 😰", "Neutral 😐"]
+    },
+    ru: {
+        appTitle: "Душевный Друг",
+        appSubtitle: "Разговор поможет",
+        labelAdvice: "Выговориться",
+        labelGossip: "Сплетни",
+        placeholder: "Напишите здесь...",
+        send: "ОТПРАВИТЬ",
+        legalTitle: "Правовое уведомление",
+        legalText: "<p class='mb-2'><strong>1. Возраст:</strong> 18+.</p><p class='mb-2'><strong>2. Отказ:</strong> ИИ-симуляция. Не заменяет врача.</p><p class='mb-2'><strong>3. Этика:</strong> Без мата и нелегального контента.</p><p class='mb-2'><strong>4. Приватность:</strong> Данные хранятся локально.</p><p class='mb-2'><strong>5. Согласие:</strong> Вы принимаете эти условия.</p>",
+        legalBtn: "Прочитал и принимаю",
+        clearHistoryMsg: "Вы уверены, что хотите очистить историю чата?",
+        introMature: "Здравствуйте. Я здесь, чтобы выслушать.",
+        introMale: "Привет, друг.",
+        introFemale: "Привет, дорогая.",
+        introNeutral: "Здравствуйте, добро пожаловать.",
+        introSad: " Вы кажетесь грустным.",
+        profileTitle: "Давайте познакомимся",
+        profileSubtitle: "Ваше безопасное пространство.",
+        startBtn: "Начать чат",
+        gender: ["Пол?", "Женский", "Мужской", "Не хочу указывать"],
+        age: ["Возраст?", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75-84", "85+"],
+        job: ["Занятость?", "Студент", "Работаю", "Безработный", "Пенсионер", "Домохозяйка"],
+        relation: ["Отношения?", "Холост/Не замужем", "В отношениях", "Помолвлен(а)", "Женат/Замужем", "Разведен(а)/Вдовец", "Все сложно"],
+        mood: ["Настроение?", "Счастлив 😃", "Грустный 😔", "Злой 😠", "Усталый 😫", "Тревожный 😰", "Нормально 😐"]
+    },
+    ja: {
+        appTitle: "心の友",
+        appSubtitle: "話すことで楽になります",
+        labelAdvice: "相談",
+        labelGossip: "噂話",
+        placeholder: "ここに入力...",
+        send: "送信",
+        legalTitle: "免責事項",
+        legalText: "<p class='mb-2'><strong>1. 年齢:</strong> 18歳以上。</p><p class='mb-2'><strong>2. 免責:</strong> AIシミュレーションです。専門家の代わりにはなりません。</p><p class='mb-2'><strong>3. 倫理:</strong> 冒涜や違法コンテンツは禁止です。</p><p class='mb-2'><strong>4. プライバシー:</strong> データはローカルに保存されます。</p><p class='mb-2'><strong>5. 同意:</strong> アプリを使用することで、これらの条件に同意したことになります。</p>",
+        legalBtn: "同意して開始",
+        clearHistoryMsg: "チャット履歴を消去してもよろしいですか？",
+        introMature: "こんにちは。お話を聞かせてください。",
+        introMale: "ようこそ、友よ。",
+        introFemale: "ようこそ。",
+        introNeutral: "こんにちは、ようこそ。",
+        introSad: " 少し悲しそうですね。",
+        profileTitle: "プロフィール",
+        profileSubtitle: "あなたの安全な場所です。",
+        startBtn: "チャットを開始",
+        gender: ["性別?", "女性", "男性", "回答しない"],
+        age: ["年齢?", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75-84", "85+"],
+        job: ["職業?", "学生", "会社員", "無職", "退職", "主婦/主夫"],
+        relation: ["交際ステータス?", "独身", "交際中", "婚約中", "既婚", "離婚/死別", "複雑"],
+        mood: ["気分?", "幸せ 😃", "悲しい 😔", "怒り 😠", "疲れた 😫", "不安 😰", "普通 😐"]
+    },
+    pt: {
+        appTitle: "Confidente da Alma",
+        appSubtitle: "Falar vai te fazer bem",
+        labelAdvice: "Desabafar",
+        labelGossip: "Fofoca",
+        placeholder: "Digite aqui...",
+        send: "ENVIAR",
+        legalTitle: "Aviso Legal",
+        legalText: "<p class='mb-2'><strong>1. Idade:</strong> 18+.</p><p class='mb-2'><strong>2. Aviso:</strong> Simulação de IA. Não substitui ajuda profissional.</p><p class='mb-2'><strong>3. Ética:</strong> Sem palavrões ou conteúdo ilegal.</p><p class='mb-2'><strong>4. Privacidade:</strong> Dados armazenados localmente.</p><p class='mb-2'><strong>5. Consentimento:</strong> Ao usar o aplicativo, você aceita estes termos.</p>",
+        legalBtn: "Li e Aceito",
+        clearHistoryMsg: "Tem certeza de que deseja limpar o histórico?",
+        introMature: "Olá. Estou aqui para ouvir.",
+        introMale: "E aí amigo, bem-vindo.",
+        introFemale: "Olá querida, bem-vinda.",
+        introNeutral: "Olá, bem-vindo.",
+        introSad: " Você parece um pouco triste.",
+        profileTitle: "Vamos te conhecer",
+        profileSubtitle: "Seu espaço seguro sem julgamentos.",
+        startBtn: "Iniciar Chat",
+        gender: ["Gênero?", "Feminino", "Masculino", "Prefiro não dizer"],
+        age: ["Faixa Etária?", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75-84", "85+"],
+        job: ["Ocupação?", "Estudante", "Empregado", "Desempregado", "Aposentado", "Do lar"],
+        relation: ["Relacionamento?", "Solteiro", "Em um relacionamento", "Noivo", "Casado", "Divorciado/Viúvo", "Complicado"],
+        mood: ["Humor?", "Feliz 😃", "Triste 😔", "Com raiva 😠", "Cansado 😫", "Ansioso 😰", "Neutro 😐"]
+    },
+    ar: {
+        appTitle: "رفيق الروح",
+        appSubtitle: "التحدث سيجعلك تشعر بتحسن",
+        labelAdvice: "فضفضة",
+        labelGossip: "دردشة",
+        placeholder: "اكتب هنا...",
+        send: "إرسال",
+        legalTitle: "إخلاء المسؤولية",
+        legalText: "<p class='mb-2'><strong>1. العمر:</strong> 18+.</p><p class='mb-2'><strong>2. تنبيه:</strong> محاكاة ذكاء اصطناعي.</p><p class='mb-2'><strong>3. الأخلاق:</strong> ممنوع الشتائم والمحتوى غير القانوني.</p><p class='mb-2'><strong>4. الخصوصية:</strong> البيانات محفوظة محلياً.</p><p class='mb-2'><strong>5. الموافقة:</strong> باستخدامك للتطبيق فإنك توافق على هذه الشروط.</p>",
+        legalBtn: "قرأت وأوافق",
+        clearHistoryMsg: "هل أنت متأكد أنك تريد مسح السجل؟",
+        introMature: "مرحباً. أنا هنا للاستماع إليك.",
+        introMale: "أهلاً يا صديقي.",
+        introFemale: "أهلاً يا عزيزتي.",
+        introNeutral: "مرحباً بك.",
+        introSad: " تبدو حزيناً قليلاً.",
+        profileTitle: "لنتعرف عليك",
+        profileSubtitle: "مساحتك الآمنة.",
+        startBtn: "ابدأ الدردشة",
+        gender: ["الجنس؟", "أنثى", "ذكر", "لا أريد التحديد"],
+        age: ["العمر؟", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75-84", "85+"],
+        job: ["العمل؟", "طالب", "موظف", "عطل", "متقاعد", "ربة منزل"],
+        relation: ["الحالة؟", "أعزب", "مرتبط", "مخطوب", "متزوج", "مطلق/أرمل", "معقد"],
+        mood: ["المزاج؟", "سعيد 😃", "حزين 😔", "غاضب 😠", "متعب 😫", "قلق 😰", "عادي 😐"]
+    },
+    zh: {
+        appTitle: "心灵知己",
+        appSubtitle: "倾诉让你更轻松",
+        labelAdvice: "倾诉",
+        labelGossip: "八卦",
+        placeholder: "在此输入...",
+        send: "发送",
+        legalTitle: "法律免责声明",
+        legalText: "<p class='mb-2'><strong>1. 年龄:</strong> 18+.</p><p class='mb-2'><strong>2. 免责:</strong> AI模拟。不代替专业帮助。</p><p class='mb-2'><strong>3. 道德:</strong> 禁止亵渎或非法内容。</p><p class='mb-2'><strong>4. 隐私:</strong> 数据本地存储。</p><p class='mb-2'><strong>5. 同意:</strong> 使用该应用程序即表示您接受这些条款。</p>",
+        legalBtn: "阅读并接受",
+        clearHistoryMsg: "您确定要清除聊天记录吗？",
+        introMature: "你好。我在这里倾听。",
+        introMale: "嘿伙计，欢迎。",
+        introFemale: "嘿亲爱的，欢迎。",
+        introNeutral: "你好，欢迎。",
+        introSad: " 你看起来有点沮丧。",
+        profileTitle: "了解你",
+        profileSubtitle: "你的无评判安全空间。",
+        startBtn: "开始聊天",
+        gender: ["性别?", "女", "男", "不愿透露"],
+        age: ["年龄?", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75-84", "85+"],
+        job: ["职业?", "学生", "在职", "待业", "退休", "家庭主妇/夫"],
+        relation: ["情感状态?", "单身", "恋爱中", "订婚", "已婚", "离异/丧偶", "复杂"],
+        mood: ["心情?", "快乐 😃", "悲伤 😔", "生气 😠", "疲惫 😫", "焦虑 😰", "平淡 😐"]
+    }
+};
+
+const AIController = {
+    history: [], userProfile: {}, genderMode: 'female',
+    loadData() {
+        try {
+            const h = localStorage.getItem('ds_history_v3'); if(h) this.history = JSON.parse(h);
+            const p = localStorage.getItem('ds_profile_v3'); if(p) this.userProfile = JSON.parse(p);
+            return !!p;
+        } catch(e) { return false; }
+    },
+    saveProfile(p) { localStorage.setItem('ds_profile_v3', JSON.stringify(p)); this.userProfile = p; },
+    saveHistory() { localStorage.setItem('ds_history_v3', JSON.stringify(this.history)); },
+    clear() { this.history = []; localStorage.removeItem('ds_history_v3'); },
+    
+    getPersonas(profile) {
+        const lang = profile.language || 'tr';
+        const age = profile.age || "25+";
+        let role = "Friend";
+        if(this.genderMode === 'male') role = "Brotherly";
+        if(this.genderMode === 'female') role = "Sisterly";
+        const addr = age.includes('18-24') ? "Use 'sen' (informal)." : "Use 'siz' (formal).";
+
+        const sys = `Role: ${role} Confidant. Lang: ${lang}. Profile: ${JSON.stringify(profile)}. 
+        ${addr} Be supportive. Max 3 sentences. No repetitive greetings if chat exists.`;
+        return { advice: sys, gossip: sys + " Tone: Gossip/Fun." };
+    },
+
+    async generate(text, mode) {
+        if(!apiKey) return "NO_KEY";
+        const sys = this.getPersonas(this.userProfile)[mode];
+        const contents = [{ role: "user", parts: [{ text: sys }] }, ...this.history, { role: "user", parts: [{ text: text }] }];
+
+        try {
+            // Using gemini-2.5-flash which is generally stable
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ contents, safetySettings: [{ category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" }, { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" }, { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" }, { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }] })
+            });
+            if(!res.ok) { const e = await res.json().catch(()=>({})); return `API ERROR: ${e.error?.message || res.status}`; }
+            const d = await res.json();
+            if(!d.candidates) return "No response.";
+            const reply = d.candidates[0].content.parts[0].text;
+            this.history.push({ role: "user", parts: [{ text }] });
+            this.history.push({ role: "model", parts: [{ text: reply }] });
+            if(this.history.length>20) this.history = this.history.slice(-20);
+            this.saveHistory();
+            return reply;
+        } catch(e) { return "CONN ERR: " + e.message; }
+    },
+    addUserMessage(t) { this.history.push({ role: "user", parts: [{ text: t }] }); this.saveHistory(); }
+};
+
+/** App Logic */
+const app = {
+    lang: 'tr', currentMode: 'advice',
+    init() {
+        this.chatBox = document.getElementById('chatBox');
+        this.input = document.getElementById('userInput');
+        try { CanvasEffect.init(); } catch(e) {}
+        this.input.addEventListener('input', () => { if(this.sendTimeout) { clearTimeout(this.sendTimeout); this.sendTimeout = null; this.removeTyping(); } });
+        
+        const hasProfile = AIController.loadData();
+        setTimeout(() => {
+            const sp = document.getElementById('splashScreen');
+            if(sp) { sp.classList.add('fade-out'); setTimeout(() => sp.style.display = 'none', 600); }
+            this.checkFlow(hasProfile);
+        }, 2000);
+    },
+
+    checkFlow(hasProfile) {
+        if(!apiKey) { alert("API Key Eksik! Lütfen kodun içindeki apiKey değişkenine anahtarınızı girin."); return; }
+        const modal = document.getElementById('legalModal');
+        modal.classList.add('active');
+        if(hasProfile && AIController.userProfile.language) {
+            this.lang = AIController.userProfile.language;
+            const sel = document.getElementById('legalLangSelect');
+            if(sel) sel.value = this.lang;
+        }
+        this.updateLang(this.lang);
+    },
+
+    changeAppLanguage(val) { this.lang = val; this.updateLang(val); },
+
+    updateLang(l) {
+        const t = Translations[l] || Translations['tr'];
+        if(!t) return;
+        const setT = (id, v) => { const el = document.getElementById(id); if(el) el.innerText = v; };
+        const setH = (id, v) => { const el = document.getElementById(id); if(el) el.innerHTML = v; };
+
+        setT('legalTitle', t.legalTitle); setH('legalTextContent', t.legalText); setT('legalBtn', t.legalBtn);
+        setT('profileTitle', t.profileTitle); setT('profileSubtitle', t.profileSubtitle); setH('startBtn', `${t.startBtn} <i class="fa-solid fa-arrow-right ml-2"></i>`);
+        setT('appTitle', t.appTitle); setT('appSubtitle', t.appSubtitle); setT('labelAdvice', t.labelAdvice); setT('labelGossip', t.labelGossip);
+        const inp = document.getElementById('userInput'); if(inp) inp.placeholder = t.placeholder;
+
+        this.fillSelect('userGender', t.gender);
+        this.fillSelect('userAge', t.age);
+        this.fillSelect('userJob', t.job);
+        this.fillSelect('userRelation', t.relation);
+        this.fillSelect('userMood', t.mood);
+
+        if(l==='ar') document.body.classList.add('lang-ar'); else document.body.classList.remove('lang-ar');
+    },
+
+    fillSelect(id, opts) {
+        const sel = document.getElementById(id);
+        if(!sel) return;
+        if(!Array.isArray(opts)) return;
+        const idx = sel.selectedIndex;
+        sel.innerHTML = '';
+        opts.forEach((o, i) => {
+            const op = document.createElement('option');
+            op.value = o; op.innerText = o;
+            if(i===0) { op.disabled = true; op.selected = true; }
+            sel.add(op);
+        });
+        if(idx > 0 && idx < opts.length) sel.selectedIndex = idx;
+    },
+
+    acceptLegal() {
+        this.lang = document.getElementById('legalLangSelect').value;
+        document.getElementById('legalModal').classList.remove('active');
+        
+        if(AIController.userProfile && AIController.userProfile.age) {
+            AIController.userProfile.language = this.lang;
+            AIController.saveProfile(AIController.userProfile);
+            this.updateLang(this.lang);
+            this.prefillProfile();
+            this.updateBranding(AIController.genderMode);
+            
+            if(AIController.history.length > 0) this.restoreChat();
+            else {
+                setTimeout(() => {
+                    const t = Translations[this.lang] || Translations['tr'];
+                    this.addBubble(t.intro, 'ai');
+                }, 500);
+            }
+        } else {
+            this.updateLang(this.lang);
+            document.getElementById('profileModal').classList.remove('hidden');
+            document.getElementById('profileModal').classList.add('active');
+        }
+    },
+
+    prefillProfile() {
+        const p = AIController.userProfile;
+        if(!p) return;
+        if(p.gender) this.handleGenderChange(p.gender);
+    },
+
+    handleGenderChange(val) {
+        const icon = document.getElementById('introIcon');
+        const btn = document.getElementById('startBtn');
+        const job = document.getElementById('userJob');
+        
+        if(!icon) return;
+
+        icon.className = "w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-xl mx-auto mb-3 transition-colors duration-500";
+        btn.className = "w-full text-white font-bold py-3 px-6 rounded-xl shadow-lg transform transition hover:scale-105 mt-2";
+        
+        const isM = val.toLowerCase().includes('erkek') || val.toLowerCase().includes('male') || val.toLowerCase().includes('männlich');
+        const isF = val.toLowerCase().includes('kadın') || val.toLowerCase().includes('female');
+
+        // Reset list first
+        const t = Translations[this.lang] || Translations['tr'];
+        this.fillSelect('userJob', t.job);
+
+        if(isM) {
+            icon.classList.add('bg-gradient-to-br', 'from-blue-600', 'to-cyan-600');
+            btn.classList.add('bg-gradient-to-r', 'from-blue-600', 'to-cyan-600', 'hover:from-blue-500', 'hover:to-cyan-500');
+            
+            if(job) {
+                for(let i=0; i<job.options.length; i++) {
+                    const txt = job.options[i].value;
+                    if(txt.includes('Hanım') || txt.includes('Homemaker') || txt.includes('Hausfrau')) {
+                        job.remove(i);
+                        i--;
+                    }
+                }
+            }
+            AIController.genderMode = 'male';
+        } else {
+            if(isF) {
+                icon.classList.add('bg-gradient-to-br', 'from-pink-500', 'to-purple-600');
+                btn.classList.add('bg-gradient-to-r', 'from-pink-600', 'to-purple-600', 'hover:from-pink-500', 'hover:to-purple-500');
+                AIController.genderMode = 'female';
+            } else {
+                icon.classList.add('bg-gradient-to-br', 'from-indigo-500', 'to-violet-600');
+                btn.classList.add('bg-gradient-to-r', 'from-indigo-600', 'to-violet-600', 'hover:from-indigo-500', 'hover:to-violet-500');
+                AIController.genderMode = 'neutral';
+            }
+        }
+    },
+
+    submitProfile() {
+        const g = document.getElementById('userGender').value;
+        const a = document.getElementById('userAge').value;
+        if(document.getElementById('userAge').selectedIndex === 0) { alert("Lütfen tüm alanları doldurun."); return; }
+        
+        const p = { gender:g, age:a, language:this.lang, 
+            job:document.getElementById('userJob').value, 
+            relation:document.getElementById('userRelation').value, 
+            mood:document.getElementById('userMood').value 
+        };
+        AIController.saveProfile(p);
+        
+        this.updateBranding(AIController.genderMode);
+        document.getElementById('profileModal').classList.remove('active');
+        document.getElementById('profileModal').classList.add('hidden');
+        
+        setTimeout(() => {
+            const t = Translations[this.lang] || Translations['tr'];
+            let txt = t.intro;
+            if(p.mood.includes('Üzgün') || p.mood.includes('Sad')) txt += " 😔";
+            this.addBubble(txt, 'ai');
+        }, 800);
+    },
+
+    updateBranding(mode) {
+        const h = document.getElementById('headerIconContainer');
+        const b = document.getElementById('sendBtn');
+        const i = document.getElementById('userInput');
+        
+        h.className = "w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg relative transition-colors duration-500";
+        b.className = "send-btn-custom text-white";
+        i.className = "w-full bg-gray-800 text-white rounded-xl px-4 py-3 border border-gray-600 outline-none resize-none text-sm";
+
+        if(mode === 'male') {
+            h.classList.add('bg-gradient-to-br', 'from-blue-600', 'to-cyan-600');
+            b.classList.add('bg-blue-600');
+            i.classList.add('focus:border-blue-500');
+        } else if(mode === 'female') {
+            h.classList.add('bg-gradient-to-br', 'from-pink-500', 'to-purple-600');
+            b.classList.add('bg-pink-600');
+            i.classList.add('focus:border-pink-500');
+        } else {
+            h.classList.add('bg-gradient-to-br', 'from-indigo-500', 'to-violet-600');
+            b.classList.add('bg-indigo-600');
+            i.classList.add('focus:border-indigo-500');
+        }
+    },
+
+    clearChatHistory() {
+        const t = Translations[this.lang] || Translations['tr'];
+        if(confirm(t.clearMsg)) { AIController.clear(); document.getElementById('chatBox').innerHTML = ''; }
+    },
+
+    restoreChat() {
+        const h = AIController.history;
+        const box = document.getElementById('chatBox');
+        box.innerHTML = '';
+        h.forEach(m => {
+            const r = m.role==='user'?'user':'ai';
+            if(m.parts && m.parts[0].text) this.addBubble(m.parts[0].text, r, true);
+        });
+        setTimeout(() => this.scrollToBottom(), 100);
+    },
+
+    setMode(m) {
+        this.currentMode = m;
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        if(m==='advice') document.getElementById('btnAdvice').classList.add('active');
+        else document.getElementById('btnGossip').classList.add('active');
+    },
+
+    async sendMessage() {
+        const txt = this.input.value.trim();
+        if(!txt) return;
+        this.addBubble(txt, 'user');
+        this.input.value = '';
+        AIController.addUserMessage(txt);
+        
+        const tid = 't-'+Date.now();
+        this.showTyping(tid);
+        
+        const res = await AIController.generate(txt, this.currentMode);
+        const te = document.getElementById(tid); if(te) te.remove();
+        
+        if(res.includes("ERROR") || res.includes("NO_KEY")) { alert(res); return; }
+        this.addBubble(res, 'ai');
+    },
+
+    addBubble(txt, type, noAnim) {
+        const box = document.getElementById('chatBox');
+        const div = document.createElement('div');
+        div.className = "message-container";
+        
+        const b = document.createElement('div');
+        b.className = `message ${type}`;
+        if(noAnim) b.style.animation = 'none';
+        b.innerHTML = txt.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+        div.appendChild(b);
+        
+        if(type==='ai' || type==='giybet') {
+            const fb = document.createElement('div');
+            fb.className = 'feedback-container';
+            fb.innerHTML = `<i class="fa-regular fa-thumbs-up fb-btn" onclick="this.classList.toggle('active-like')"></i><i class="fa-regular fa-thumbs-down fb-btn" onclick="this.classList.toggle('active-dislike')"></i>`;
+            if(!noAnim) div.appendChild(fb);
+        }
+        
+        box.appendChild(div);
+        this.scrollToBottom();
+    },
+
+    showTyping(id) {
+        const box = document.getElementById('chatBox');
+        const d = document.createElement('div'); d.id = id;
+        d.className = "message ai opacity-50"; d.style.width="60px";
+        d.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+        box.appendChild(d);
+        this.scrollToBottom();
+    },
+    removeTyping() { /* handled by IDs */ },
+    scrollToBottom() { const b = document.getElementById('chatBox'); b.scrollTop = b.scrollHeight; }
+};
+
+window.onload = () => app.init();
+</script>
+</body>
+</html>
